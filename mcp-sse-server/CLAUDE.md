@@ -38,7 +38,7 @@ claude mcp add --transport sse sse-server http://localhost:8000/sse
 
 ![img.png](images/img-test-sse-server2.png)
 
-![img.png](images/img-test-sse-server3.png)
+![img.png](images/img-test-sse-server4.png)
 
 ## Architecture
 
