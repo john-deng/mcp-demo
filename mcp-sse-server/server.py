@@ -7,11 +7,20 @@ from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass, asdict
 from mcp.server import Server
 from mcp.server.models import InitializationOptions
-from mcp.server.stdio import stdio_server
+from mcp.server.sse import SseServerTransport
 from mcp.types import (
     Tool,
     TextContent,
 )
+
+try:
+    from starlette.applications import Starlette
+    from starlette.routing import Route, Mount
+    from starlette.responses import Response
+    import uvicorn
+except ImportError:
+    print("Please install starlette and uvicorn: uv pip install starlette uvicorn")
+    exit(1)
 
 app = Server("calculator-server")
 
@@ -116,11 +125,17 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
     except Exception as e:
         return [TextContent(type="text", text=f"Unexpected error: {str(e)}")]
 
-async def main():
-    async with stdio_server() as (read_stream, write_stream):
+# Create SSE transport
+sse = SseServerTransport("/message")
+
+async def handle_sse(request):
+    """Handle SSE connections"""
+    async with sse.connect_sse(
+        request.scope, request.receive, request._send
+    ) as streams:
         await app.run(
-            read_stream,
-            write_stream,
+            streams[0], 
+            streams[1], 
             InitializationOptions(
                 server_name="calculator-server",
                 server_version="0.1.0",
@@ -128,8 +143,22 @@ async def main():
                     "tools": {},
                     "prompts": {}
                 },
-            ),
+            )
         )
+    return Response()
+
+def main():
+    # Create Starlette routes
+    routes = [
+        Route("/sse", endpoint=handle_sse, methods=["GET"]),
+        Mount("/message", app=sse.handle_post_message),
+    ]
+    
+    # Create and run Starlette app
+    starlette_app = Starlette(routes=routes)
+    
+    # Start server (remove print statements that interfere with JSON parsing)
+    uvicorn.run(starlette_app, host="127.0.0.1", port=8000, log_level="info")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
