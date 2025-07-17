@@ -79,7 +79,7 @@ async def test_sse_server():
 
 if __name__ == "__main__":
     print("Make sure your SSE server is running on http://localhost:8000")
-    print("Run: python server.py")
+    print("Run: python handler.py")
     print("\nStarting test in 3 seconds...")
     
     import time

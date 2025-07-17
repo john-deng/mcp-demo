@@ -19,7 +19,7 @@ uv pip install -r requirements.txt
 ### Running the SSE Server
 ```bash
 # Run the MCP SSE server
-python3 server.py
+python3 handler.py
 
 # The server will start on http://localhost:8000
 # SSE endpoint: http://localhost:8000/sse

@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 
-import asyncio
-import json
 import logging
-import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Union
 from dataclasses import dataclass, asdict
 from mcp.server import Server
-from mcp.server.models import InitializationOptions
-from mcp.server.sse import SseServerTransport
 from mcp.types import (
     Tool,
     TextContent,
@@ -126,43 +121,3 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
     except Exception as e:
         return [TextContent(type="text", text=f"Unexpected error: {str(e)}")]
 
-public_path = os.getenv("PUBLIC_PATH", "")
-uri_sse = os.path.join(public_path, 'sse')
-uri_message = os.path.join(public_path, 'message')
-
-sse = SseServerTransport(uri_message)
-
-async def handle_sse(request):
-    """Handle SSE connections"""
-    async with sse.connect_sse(
-        request.scope, request.receive, request._send
-    ) as streams:
-        await app.run(
-            streams[0], 
-            streams[1], 
-            InitializationOptions(
-                server_name="calculator-server",
-                server_version="0.1.0",
-                capabilities={
-                    "tools": {},
-                    "prompts": {}
-                },
-            )
-        )
-    return Response()
-
-def main():
-    # Create Starlette routes
-    routes = [
-        Route(uri_sse, endpoint=handle_sse, methods=["GET"]),
-        Mount(uri_message, app=sse.handle_post_message),
-    ]
-    
-    # Create Starlette app
-    starlette_app = Starlette(routes=routes)
-
-    # Start server
-    uvicorn.run(starlette_app, host="0.0.0.0", port=8000, log_level="info")
-
-if __name__ == "__main__":
-    main()
