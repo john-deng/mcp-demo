@@ -1,0 +1,48 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  creationTimestamp: "2025-07-16T07:28:24Z"
+  generation: 1
+  labels:
+    app: mcp-dev
+    controller: titan-controller
+    module: ide-mcp-dev
+  name: ide-mcp-dev-8000
+  namespace: dev
+  resourceVersion: "108872660"
+  uid: bb6c33eb-4fd0-447f-a8b8-9b17fc38259e
+spec:
+  stripPrefix:
+    prefixes:
+    - /app/575655665364687474/8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.frontend.rule.type: PathPrefix
+    traefik.ingress.kubernetes.io/rewrite-target: /
+    traefik.ingress.kubernetes.io/router.middlewares: dev-ide-mcp-dev-8000@kubernetescrd
+  creationTimestamp: "2025-07-16T08:00:44Z"
+  generation: 1
+  labels:
+    app: mcp-dev
+    controller: titan-controller
+    module: ide-mcp-dev
+  name: ide-mcp-dev-8000
+  namespace: dev
+  resourceVersion: "108881270"
+  uid: 5c7dc142-6fa3-40b1-95de-cdcffb8b5b49
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: ce.titanide.cn
+    http:
+      paths:
+      - backend:
+          service:
+            name: ide-mcp-dev
+            port:
+              number: 8000
+        path: /app/575655665364687474/8000
+        pathType: ImplementationSpecific
